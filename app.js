@@ -6,7 +6,6 @@ let keys = [];
 let generated = [];
 let stopKeys = null;
 let stopNotifs = null;
-let stopAuth = null;
 const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
 function randomPart(n) {

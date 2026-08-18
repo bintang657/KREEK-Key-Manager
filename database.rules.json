@@ -2,25 +2,32 @@
   "rules": {
     ".read": false,
     ".write": false,
+
     "auth": {
       ".read": true,
       ".write": "auth != null"
     },
+
     "keys": {
       ".read": "auth != null",
       "$keyId": {
+        ".write": "auth != null",
         ".validate": "newData.hasChildren(['key','status','createdAt']) && newData.child('status').val() in ['active','revoked']"
       }
     },
+
     "notifications": {
       ".read": true,
       "$notificationId": {
+        ".write": "auth != null",
         ".validate": "newData.hasChildren(['title','body','createdAt'])"
       }
     },
+
     "update": {
       ".read": false,
       "$updateId": {
+        ".write": "auth != null",
         ".validate": "newData.hasChildren(['new','link'])"
       }
     }

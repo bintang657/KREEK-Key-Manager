@@ -1,0 +1,10 @@
+{
+  "rules": {
+    "config": {
+      "password": {
+        ".read": true,
+        ".write": "auth != null"
+      }
+    }
+  }
+}

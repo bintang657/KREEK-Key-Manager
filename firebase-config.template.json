@@ -1,0 +1,10 @@
+{
+  "apiKey": "AIzaSyBIDcqzXET2vx8aO2elNb8aQw2ipdiirho",
+  "authDomain": "star-sensi-control.firebaseapp.com",
+  "databaseURL": "https://star-sensi-control-default-rtdb.asia-southeast1.firebasedatabase.app",
+  "projectId": "star-sensi-control",
+  "storageBucket": "star-sensi-control.firebasestorage.app",
+  "messagingSenderId": "552938206219",
+  "appId": "1:552938206219:web:ff67c83ea8c57ca44bc30e",
+  "androidAppId": "1:552938206219:android:9359ef66e64e116a4bc30e"
+}

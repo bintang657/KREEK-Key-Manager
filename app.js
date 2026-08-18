@@ -100,7 +100,7 @@ $("sendNotif").onclick = async () => {
   const body = $("notifBody").value.trim();
   if (!title || !body) return toast("Title dan message wajib diisi");
   const r = push(ref(db, "notifications"));
-  await set(r, { title, body, target: $("notifTarget").value, createdAt: Date.now() });
+  await set(r, { title, body, target: $("notifTarget").value, type: "general", createdAt: Date.now() });
   toast("Notification sent realtime");
 };
 
@@ -108,8 +108,18 @@ $("saveRemotePassword").onclick = async () => {
   const password = $("remotePassword").value;
   if (password.length < 4) return toast("Password minimal 4 karakter");
   await update(ref(db, "auth"), { password, enabled: $("remoteEnabled").checked, updatedAt: Date.now() });
+
+  const r = push(ref(db, "notifications"));
+  await set(r, {
+    title: "Password Updated",
+    body: "App password has been updated in realtime.",
+    target: "all",
+    type: "auth_changed",
+    createdAt: Date.now()
+  });
+
   $("remotePassword").value = "";
-  toast("Remote password updated realtime");
+  toast("Password updated + notification sent realtime");
 };
 
 $("remoteEnabled").onchange = async () => {

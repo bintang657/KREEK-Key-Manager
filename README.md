@@ -1,40 +1,22 @@
-# KREEK Key Manager
+# KREEK Connected Web
 
-Web dashboard untuk mengelola license key berbasis Firebase Firestore.
+This version changes the dashboard from Firestore to Firebase Realtime Database and adds a realtime remote app-password control.
 
-## Setup
+## Firebase setup
 
-1. Buat project Firebase.
-2. Aktifkan Firestore Database.
-3. Aktifkan Authentication dan pilih provider yang ingin dipakai, minimal Email/Password.
-4. Buat Firebase Web App.
-5. Salin config Web App ke `firebase-config.js` berdasarkan `firebase-config.example.js`.
-6. Tambahkan autentikasi admin pada aplikasi sebelum production. Starter UI ini sengaja memisahkan credential Firebase dari source.
-7. Deploy folder ini ke Vercel atau hosting static lain.
+1. In Firebase project `kreek-4aa08`, create Realtime Database.
+2. Copy the exact Database URL into `firebase-config.js` as `databaseURL`.
+3. Enable Authentication > Email/Password.
+4. Create an admin user in Firebase Authentication.
+5. Import `database.rules.json` into Realtime Database Rules.
+6. Deploy this folder to Vercel.
 
-## Struktur data
+## Database layout
 
-`keys/{id}`
-- `key`: string
-- `status`: active/revoked
-- `createdAt`: Firestore timestamp
-- `expiresAt`: ISO string atau null
-- `deviceId`: null sampai aplikasi pertama kali mengaktifkan key
+- `/auth/password` — password consumed by the patched APK.
+- `/auth/enabled` — password gate enabled/disabled.
+- `/keys/{id}` — license keys.
+- `/notifications/{id}` — realtime notification events.
+- `/update/{id}` — existing APK update channel (`new`, `link`).
 
-`notifications/{id}`
-- `title`
-- `body`
-- `target`
-- `createdAt`
-
-## One-device enforcement
-
-Binding device HARUS dilakukan oleh aplikasi client melalui transaksi Firestore/Cloud Function agar dua device tidak bisa memenangkan race condition. Jangan mempercayai `deviceId` yang dikirim client sebagai bukti identitas absolut.
-
-## Realtime
-
-Client Android dapat memakai Firestore listener (`addSnapshotListener`) pada:
-- `keys/{id}` untuk status/expiry/device binding
-- `notifications` untuk pesan realtime
-
-Untuk production, gunakan Firebase Authentication + custom claims untuk admin dan Firestore Rules yang membatasi admin write.
+The Firebase Web API key is not a server secret. Never put a Firebase service-account private key in this frontend.

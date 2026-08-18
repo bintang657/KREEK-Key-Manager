@@ -1,45 +1,143 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
-import { firebaseConfig } from "./firebase-config.js";
+import { ref, push, set, update, remove, onValue, serverTimestamp as rtdbServerTimestamp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
+import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+import { auth, db } from "./firebase-config.js";
 
-const app=initializeApp(firebaseConfig), db=getFirestore(app);
-const $=id=>document.getElementById(id);
-let keys=[], generated=[];
+const $ = id => document.getElementById(id);
+let keys = [];
+let generated = [];
+let stopKeys = null;
+let stopNotifs = null;
+let stopAuth = null;
+const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
-const alphabet="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-function randomPart(n){let s="";crypto.getRandomValues(new Uint32Array(n)).forEach(x=>s+=alphabet[x%alphabet.length]);return s}
-function expiry(){const custom=$("customExpiry").value;if(custom)return new Date(custom);const d=+$("expiration").value;if(!d)return null;return new Date(Date.now()+d*86400000)}
-function toast(x){$("toast").textContent=x;$("toast").style.display="block";setTimeout(()=>$("toast").style.display="none",2200)}
-function fmt(x){return x?new Date(x).toLocaleString("id-ID"):"Never"}
+function randomPart(n) {
+  let s = "";
+  crypto.getRandomValues(new Uint32Array(n)).forEach(x => s += alphabet[x % alphabet.length]);
+  return s;
+}
+function expiry() {
+  const custom = $("customExpiry").value;
+  if (custom) return new Date(custom).toISOString();
+  const d = +$("expiration").value;
+  return d ? new Date(Date.now() + d * 86400000).toISOString() : null;
+}
+function toast(x) {
+  $("toast").textContent = x;
+  $("toast").style.display = "block";
+  setTimeout(() => $("toast").style.display = "none", 2200);
+}
+function fmt(x) { return x ? new Date(x).toLocaleString("id-ID") : "Never"; }
+function escapeHtml(s) {
+  return String(s ?? "").replace(/[&<>'"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;","\"":"&quot;"}[c]));
+}
 
-window.showPage=p=>{document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));$(""+p).classList.add("active");document.querySelectorAll(".nav").forEach(x=>x.classList.toggle("active",x.dataset.page===p));$("pageTitle").textContent=document.querySelector(`[data-page="${p}"]`).textContent};
-document.querySelectorAll(".nav").forEach(x=>x.onclick=()=>showPage(x.dataset.page));
-
-$("generateBtn").onclick=async()=>{
- const n=Math.min(500,Math.max(1,+$("amount").value||1)), mode=$("keyMode").value, prefix=$("prefix").value.trim()||"KREEK", len=Math.max(8,Math.min(64,+$("length").value||20)), exp=expiry();
- generated=[];
- for(let i=0;i<n;i++){
-   const key=mode==="custom"?`${prefix}-${randomPart(len)}`:randomPart(len);
-   const data={key,status:"active",createdAt:serverTimestamp(),expiresAt:exp?exp.toISOString():null,deviceId:null};
-   await addDoc(collection(db,"keys"),data); generated.push(key);
- }
- $("generated").textContent=generated.join("\n"); toast(`${n} key berhasil dibuat`);
+window.showPage = p => {
+  document.querySelectorAll(".page").forEach(x => x.classList.remove("active"));
+  $(p).classList.add("active");
+  document.querySelectorAll(".nav").forEach(x => x.classList.toggle("active", x.dataset.page === p));
+  $("pageTitle").textContent = document.querySelector(`[data-page="${p}"]`).textContent;
 };
 
-$("copyGenerated").onclick=async()=>{if(generated.length){await navigator.clipboard.writeText(generated.join("\n"));toast("Keys copied")}};
-$("sendNotif").onclick=async()=>{const title=$("notifTitle").value.trim(),body=$("notifBody").value.trim();if(!title||!body)return toast("Title dan message wajib diisi");await addDoc(collection(db,"notifications"),{title,body,target:$("notifTarget").value,createdAt:serverTimestamp()});toast("Notification sent")};
+document.querySelectorAll(".nav").forEach(x => x.onclick = () => showPage(x.dataset.page));
 
-onSnapshot(query(collection(db,"keys"),orderBy("createdAt","desc")),snap=>{
- keys=snap.docs.map(d=>({id:d.id,...d.data()}));render();});
-function render(){
- const now=Date.now(), active=keys.filter(k=>k.status==="active"&&(!k.expiresAt||new Date(k.expiresAt)>now)), bound=keys.filter(k=>k.deviceId);
- $("totalKeys").textContent=keys.length;$("activeKeys").textContent=active.length;$("boundDevices").textContent=bound.length;$("expiredKeys").textContent=keys.filter(k=>k.expiresAt&&new Date(k.expiresAt)<=now).length;
- const q=$("search").value.toLowerCase();
- $("keyRows").innerHTML=keys.filter(k=>k.key.toLowerCase().includes(q)).map(k=>`<tr><td>${k.key}</td><td><span class="badge">${k.status}</span></td><td>${fmt(k.expiresAt)}</td><td>${k.deviceId?"BOUND":"UNBOUND"}</td><td><button class="danger" data-id="${k.id}">Revoke</button></td></tr>`).join("");
- document.querySelectorAll(".danger").forEach(b=>b.onclick=async()=>{await updateDoc(doc(db,"keys",b.dataset.id),{status:"revoked"});toast("Key revoked")});
+async function loadRealtime() {
+  if (stopKeys) stopKeys();
+  if (stopNotifs) stopNotifs();
+
+  stopKeys = onValue(ref(db, "keys"), snap => {
+    const data = snap.val() || {};
+    keys = Object.entries(data).map(([id, value]) => ({ id, ...value }))
+      .sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
+    render();
+  }, err => toast(`Keys listener: ${err.message}`));
+
+  stopNotifs = onValue(ref(db, "notifications"), snap => {
+    const data = snap.val() || {};
+    const events = Object.values(data).sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 8);
+    $("activity").innerHTML = events.length
+      ? events.map(e => `<div class="event"><b>${escapeHtml(e.title)}</b><br>${escapeHtml(e.body)}</div>`).join("")
+      : `<div class="empty">No activity yet.</div>`;
+  });
+
+  onValue(ref(db, "auth"), snap => {
+    const data = snap.val() || {};
+    $("remotePasswordStatus").textContent = data.password ? "REMOTE PASSWORD ACTIVE" : "REMOTE PASSWORD NOT SET";
+    $("remoteEnabled").checked = data.enabled !== false;
+    $("currentPasswordHint").textContent = data.password ? `Password length: ${String(data.password).length}` : "No password configured";
+  });
 }
-$("search").oninput=render;
-onSnapshot(query(collection(db,"notifications"),orderBy("createdAt","desc")),snap=>{
- const events=snap.docs.slice(0,8).map(d=>d.data());
- $("activity").innerHTML=events.length?events.map(e=>`<div class="event"><b>${e.title}</b><br>${e.body}</div>`).join(""):`<div class="empty">No activity yet.</div>`;
+
+$("loginBtn").onclick = async () => {
+  try {
+    await signInWithEmailAndPassword(auth, $("email").value.trim(), $("adminPassword").value);
+  } catch (e) { toast(e.message); }
+};
+$("logoutBtn").onclick = () => signOut(auth);
+
+$("generateBtn").onclick = async () => {
+  const n = Math.min(500, Math.max(1, +$("amount").value || 1));
+  const mode = $("keyMode").value;
+  const prefix = $("prefix").value.trim() || "KREEK";
+  const len = Math.max(8, Math.min(64, +$("length").value || 20));
+  const exp = expiry();
+  generated = [];
+  for (let i = 0; i < n; i++) {
+    const key = mode === "custom" ? `${prefix}-${randomPart(len)}` : randomPart(len);
+    const keyRef = push(ref(db, "keys"));
+    await set(keyRef, { key, status: "active", createdAt: Date.now(), expiresAt: exp, deviceId: null });
+    generated.push(key);
+  }
+  $("generated").textContent = generated.join("\n");
+  toast(`${n} key berhasil dibuat`);
+};
+
+$("copyGenerated").onclick = async () => {
+  if (generated.length) { await navigator.clipboard.writeText(generated.join("\n")); toast("Keys copied"); }
+};
+
+$("sendNotif").onclick = async () => {
+  const title = $("notifTitle").value.trim();
+  const body = $("notifBody").value.trim();
+  if (!title || !body) return toast("Title dan message wajib diisi");
+  const r = push(ref(db, "notifications"));
+  await set(r, { title, body, target: $("notifTarget").value, createdAt: Date.now() });
+  toast("Notification sent realtime");
+};
+
+$("saveRemotePassword").onclick = async () => {
+  const password = $("remotePassword").value;
+  if (password.length < 4) return toast("Password minimal 4 karakter");
+  await update(ref(db, "auth"), { password, enabled: $("remoteEnabled").checked, updatedAt: Date.now() });
+  $("remotePassword").value = "";
+  toast("Remote password updated realtime");
+};
+
+$("remoteEnabled").onchange = async () => {
+  await update(ref(db, "auth"), { enabled: $("remoteEnabled").checked, updatedAt: Date.now() });
+  toast($("remoteEnabled").checked ? "Password enabled" : "Password disabled");
+};
+
+function render() {
+  const now = Date.now();
+  const active = keys.filter(k => k.status === "active" && (!k.expiresAt || new Date(k.expiresAt) > now));
+  const bound = keys.filter(k => k.deviceId);
+  $("totalKeys").textContent = keys.length;
+  $("activeKeys").textContent = active.length;
+  $("boundDevices").textContent = bound.length;
+  $("expiredKeys").textContent = keys.filter(k => k.expiresAt && new Date(k.expiresAt) <= now).length;
+  const q = $("search").value.toLowerCase();
+  $("keyRows").innerHTML = keys.filter(k => String(k.key).toLowerCase().includes(q)).map(k =>
+    `<tr><td>${escapeHtml(k.key)}</td><td><span class="badge">${escapeHtml(k.status)}</span></td><td>${fmt(k.expiresAt)}</td><td>${k.deviceId ? "BOUND" : "UNBOUND"}</td><td><button class="danger" data-id="${escapeHtml(k.id)}">Revoke</button></td></tr>`
+  ).join("");
+  document.querySelectorAll(".danger").forEach(b => b.onclick = async () => {
+    await update(ref(db, `keys/${b.dataset.id}`), { status: "revoked", updatedAt: Date.now() });
+    toast("Key revoked realtime");
+  });
+}
+$("search").oninput = render;
+
+stopAuth = onAuthStateChanged(auth, user => {
+  $("login").classList.toggle("hidden", !!user);
+  $("app").classList.toggle("hidden", !user);
+  if (user) loadRealtime();
 });

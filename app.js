@@ -1,6 +1,5 @@
 import { ref, push, set, update, remove, onValue, serverTimestamp as rtdbServerTimestamp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
-import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-import { auth, db } from "./firebase-config.js";
+import { db } from "./firebase-config.js";
 
 const $ = id => document.getElementById(id);
 let keys = [];
@@ -67,12 +66,6 @@ async function loadRealtime() {
   });
 }
 
-$("loginBtn").onclick = async () => {
-  try {
-    await signInWithEmailAndPassword(auth, $("email").value.trim(), $("adminPassword").value);
-  } catch (e) { toast(e.message); }
-};
-$("logoutBtn").onclick = () => signOut(auth);
 
 $("generateBtn").onclick = async () => {
   const n = Math.min(500, Math.max(1, +$("amount").value || 1));
@@ -146,8 +139,4 @@ function render() {
 }
 $("search").oninput = render;
 
-stopAuth = onAuthStateChanged(auth, user => {
-  $("login").classList.toggle("hidden", !!user);
-  $("app").classList.toggle("hidden", !user);
-  if (user) loadRealtime();
-});
+loadRealtime();

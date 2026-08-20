@@ -9,6 +9,7 @@
 *{box-sizing:border-box}body{margin:0;min-height:100vh;font-family:Inter,system-ui,Segoe UI,sans-serif;color:var(--text);background:radial-gradient(circle at 15% 0%,#aeb2b7 0,#777b80 36%,#34383c 100%);overflow-x:hidden}
 body:before{content:"";position:fixed;inset:0;pointer-events:none;background:linear-gradient(120deg,rgba(255,255,255,.10),transparent 30%,rgba(255,255,255,.04) 60%,transparent)}
 .shell{max-width:1240px;margin:auto;padding:28px}.top{display:flex;justify-content:space-between;gap:20px;align-items:center;margin-bottom:20px}.brand h1{margin:0;font-size:25px}.brand p{margin:5px 0;color:var(--muted);font-size:13px}.status{padding:10px 14px;border:1px solid var(--line);background:var(--panel);border-radius:16px;backdrop-filter:blur(18px);font-size:12px}.grid{display:grid;grid-template-columns:1.25fr .75fr;gap:18px}.card{border:1px solid var(--line);background:linear-gradient(145deg,rgba(255,255,255,.13),rgba(15,17,19,.56));box-shadow:0 22px 60px rgba(0,0,0,.22),inset 0 1px rgba(255,255,255,.10);border-radius:24px;padding:22px;backdrop-filter:blur(22px)}.wide{grid-column:1/-1}.card h2{margin:0 0 16px;font-size:17px}.row{display:flex;gap:12px;flex-wrap:wrap}.field{flex:1;min-width:220px}.field label{display:block;font-size:12px;color:var(--muted);margin:0 0 7px}.field input{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:13px;background:rgba(0,0,0,.18);color:var(--text);outline:none}.field input:focus{border-color:rgba(255,255,255,.45);box-shadow:0 0 0 3px rgba(255,255,255,.06)}button{border:1px solid var(--line);border-radius:13px;padding:12px 16px;background:linear-gradient(180deg,#e9ebee,#b9bec4);color:#25282b;font-weight:700;cursor:pointer}button.secondary{background:rgba(255,255,255,.08);color:var(--text)}button.danger{background:rgba(180,80,80,.22);color:#fff}.big{font-size:30px;font-weight:800;letter-spacing:.02em}.metric{display:flex;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--line)}.metric:last-child{border:0}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}.log{height:190px;overflow:auto;background:rgba(0,0,0,.2);border:1px solid var(--line);border-radius:14px;padding:12px;font:12px/1.6 ui-monospace,monospace;color:#d8dce0}.hint{font-size:12px;color:var(--muted);line-height:1.6}.hidden{display:none}@media(max-width:850px){.grid{grid-template-columns:1fr}.wide{grid-column:auto}.shell{padding:15px}.top{align-items:flex-start;flex-direction:column}}
+.device-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.device-item{padding:13px;border:1px solid var(--line);background:rgba(0,0,0,.14);border-radius:14px;min-width:0}.device-item span,.device-ua span{display:block;color:var(--muted);font-size:11px;margin-bottom:6px}.device-item strong{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.device-ua{margin-top:10px;padding:13px;border:1px solid var(--line);background:rgba(0,0,0,.14);border-radius:14px}.device-ua code{display:block;font:11px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-all;color:#d8dce0}@media(max-width:1050px){.device-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:520px){.device-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -22,12 +23,37 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;background:lin
 </div>
 <div id="app" class="hidden">
 <div class="grid">
+<section class="card wide device-card">
+<h2>Device Detection</h2>
+<div class="device-grid">
+<div class="device-item"><span>Device type</span><strong id="dType">Detecting...</strong></div>
+<div class="device-item"><span>Operating system</span><strong id="dOS">Detecting...</strong></div>
+<div class="device-item"><span>Browser</span><strong id="dBrowser">Detecting...</strong></div>
+<div class="device-item"><span>Browser engine</span><strong id="dEngine">Detecting...</strong></div>
+<div class="device-item"><span>Screen</span><strong id="dScreen">Detecting...</strong></div>
+<div class="device-item"><span>Viewport</span><strong id="dViewport">Detecting...</strong></div>
+<div class="device-item"><span>Pixel ratio</span><strong id="dDpr">Detecting...</strong></div>
+<div class="device-item"><span>CPU cores</span><strong id="dCores">Detecting...</strong></div>
+<div class="device-item"><span>Memory</span><strong id="dMemory">Detecting...</strong></div>
+<div class="device-item"><span>Language</span><strong id="dLang">Detecting...</strong></div>
+<div class="device-item"><span>Timezone</span><strong id="dTz">Detecting...</strong></div>
+<div class="device-item"><span>Touch support</span><strong id="dTouch">Detecting...</strong></div>
+<div class="device-item"><span>Connection</span><strong id="dConn">Detecting...</strong></div>
+<div class="device-item"><span>Online status</span><strong id="dOnline">Detecting...</strong></div>
+<div class="device-item"><span>Cookies</span><strong id="dCookies">Detecting...</strong></div>
+<div class="device-item"><span>WebGL renderer</span><strong id="dGpu">Detecting...</strong></div>
+</div>
+<div class="device-ua"><span>User agent</span><code id="dUA">Detecting...</code></div>
+<button class="secondary" id="refreshDevice" style="margin-top:14px">Refresh device data</button>
+<p class="hint">This panel detects the browser/device currently opening the admin dashboard. It does not collect an IP address or precise location.</p>
+</section>
 <section class="card">
-<h2>Remote Password</h2>
-<div class="big mono" id="current">••••••••</div>
-<p class="hint">Changes are written to <span class="mono">config/password</span>. The Android client listens to this node with Firebase Realtime Database and updates its in-memory verifier immediately.</p>
-<div class="row" style="margin-top:16px"><div class="field"><label>New password</label><input id="newpass" type="password"></div><div class="field"><label>Confirm</label><input id="confirm" type="password"></div></div>
-<div class="row" style="margin-top:14px"><button id="save">Apply in realtime</button><button class="secondary" id="generate">Generate</button><button class="danger" id="clear">Disable password</button></div>
+<h2>Multi-user Key Management</h2>
+<div class="row"><div class="field"><label>Jumlah key</label><input id="keyCount" type="number" min="1" max="50" value="5"></div><div class="field"><label>Prefix / label</label><input id="keyPrefix" type="text" maxlength="24" placeholder="USER"></div></div>
+<div class="row" style="margin-top:14px"><button id="generateKeys">Generate keys</button><button class="secondary" id="refreshKeys">Refresh</button><button class="danger" id="disableAll">Disable all</button></div>
+<p class="hint">Setiap key adalah credential unik. Status ACTIVE/DISABLED disimpan realtime di <span class="mono">config/keys</span> dan langsung terbaca oleh APK.</p>
+<div id="keySummary" class="metric"><span>Keys</span><strong>0</strong></div>
+<div style="overflow:auto;margin-top:12px"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr><th style="text-align:left;padding:9px">Key</th><th>Status</th><th>Label</th><th>Action</th></tr></thead><tbody id="keyRows"></tbody></table></div>
 </section>
 <section class="card">
 <h2>Connection</h2>
@@ -55,17 +81,50 @@ appId:"1:552938206219:web:ff67c83ea8c57ca44bc30e"
 import{initializeApp}from"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import{getAuth,signInWithEmailAndPassword,onAuthStateChanged,signOut,sendPasswordResetEmail}from"https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 import{getDatabase,ref,onValue,set,get}from"https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
-const app=initializeApp(cfg),auth=getAuth(app),db=getDatabase(app),passRef=ref(db,"config/password");
+const app=initializeApp(cfg),auth=getAuth(app),db=getDatabase(app),keysRef=ref(db,"config/keys");
 const $=id=>document.getElementById(id), log=t=>{$("log").textContent+=`[${new Date().toLocaleTimeString()}] ${t}\n`;$("log").scrollTop=$("log").scrollHeight};
 $("project").textContent=cfg.projectId;
 $("loginBtn").onclick=async()=>{try{await signInWithEmailAndPassword(auth,$("email").value,$("authpass").value);log("Administrator authenticated");}catch(e){log("Authentication failed: "+e.code)}};
 $("resetBtn").onclick=async()=>{const email=$("email").value.trim();if(!email){log("Enter an administrator email first");return}try{await sendPasswordResetEmail(auth,email);log("Password reset email sent");}catch(e){log("Password reset failed: "+e.code)}};
 onAuthStateChanged(auth,user=>{if(user){$("login").classList.add("hidden");$("app").classList.remove("hidden");$("status").textContent="CONNECTED";startListener()}else{$("login").classList.remove("hidden");$("app").classList.add("hidden");$("status").textContent="DISCONNECTED"}});
-function startListener(){onValue(passRef,s=>{const v=s.val();$("current").textContent=v?"•".repeat(Math.min(v.length,16)):"DISABLED";$("dbstate").textContent="Online";$("listener").textContent="Live";log(v?"Password configuration synchronized":"Password configuration empty")},e=>{log("Listener error: "+e.message);$("dbstate").textContent="Error"})}
-$("save").onclick=async()=>{const a=$("newpass").value,b=$("confirm").value;if(!a||a!==b){log("Validation failed: passwords do not match");return}if(a.length<4){log("Validation failed: minimum length is 4");return}try{await set(passRef,a);$("newpass").value=$("confirm").value="";log("Remote password updated");}catch(e){log("Write failed: "+e.message)}};
-$("generate").onclick=()=>{const chars="ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";let x="";crypto.getRandomValues(new Uint32Array(16)).forEach(n=>x+=chars[n%chars.length]);$("newpass").value=x;$("confirm").value=x;log("Generated a new candidate password")};
-$("clear").onclick=async()=>{if(confirm("Disable the password gate?")){await set(passRef,"");log("Password gate disabled")}};
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]))}
+function keyValue(){const chars="ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";const a=new Uint32Array(20);crypto.getRandomValues(a);return Array.from(a,n=>chars[n%chars.length]).join("")}
+let keyCache={};
+function renderKeys(){const rows=$("keyRows"),keys=Object.entries(keyCache);rows.innerHTML="";for(const [key,data] of keys.sort((a,b)=>a[0].localeCompare(b[0]))){const enabled=!!data?.enabled,label=data?.label||"";const tr=document.createElement("tr");tr.style.borderTop="1px solid var(--line)";tr.innerHTML=`<td class="mono" style="padding:9px;white-space:nowrap">${esc(key)}</td><td style="padding:9px;text-align:center"><strong>${enabled?"ACTIVE":"DISABLED"}</strong></td><td style="padding:9px">${esc(label)}</td><td style="padding:9px;white-space:nowrap"><button class="${enabled?"danger":"secondary"}" data-action="toggle" data-key="${esc(key)}">${enabled?"Disable":"Enable"}</button> <button class="danger" data-action="delete" data-key="${esc(key)}">Delete</button></td>`;rows.appendChild(tr)}$("keySummary").innerHTML=`<span>Keys</span><strong>${keys.length} total / ${keys.filter(([,v])=>v?.enabled).length} active</strong>`}
+async function toggleKey(key){const current=keyCache[key];if(!current)return;await set(ref(db,"config/keys/"+key),{...current,enabled:!current.enabled,updatedAt:Date.now()});log((!current.enabled?"Enabled ":"Disabled ")+key)}
+async function deleteKey(key){if(!confirm("Delete key "+key+"?"))return;await set(ref(db,"config/keys/"+key),null);log("Deleted "+key)}
+$("keyRows").addEventListener("click",async e=>{const b=e.target.closest("button[data-action]");if(!b)return;try{if(b.dataset.action==="toggle")await toggleKey(b.dataset.key);if(b.dataset.action==="delete")await deleteKey(b.dataset.key)}catch(err){log("Key action failed: "+err.message)}});
+async function generateKeys(){const count=Math.max(1,Math.min(50,Number($("keyCount").value)||1));const prefix=($("keyPrefix").value.trim()||"USER").replace(/[^A-Za-z0-9_-]/g,"").slice(0,24);const writes={};for(let i=0;i<count;i++){let key;do{key=prefix+"-"+keyValue()}while(keyCache[key]||writes[key]);writes[key]={enabled:true,label:prefix,createdAt:Date.now()}}await Promise.all(Object.entries(writes).map(([k,v])=>set(ref(db,"config/keys/"+k),v)));log("Generated "+Object.keys(writes).length+" unique keys")}
+$("generateKeys").onclick=async()=>{try{await generateKeys()}catch(e){log("Generate failed: "+e.message)}};$("refreshKeys").onclick=()=>loadKeys();
+$("disableAll").onclick=async()=>{if(!confirm("Disable all keys?"))return;await Promise.all(Object.entries(keyCache).map(([k,v])=>set(ref(db,"config/keys/"+k),{...v,enabled:false,updatedAt:Date.now()})));log("All keys disabled")};
+async function loadKeys(){try{const snap=await get(keysRef);keyCache=snap.val()||{};renderKeys();$("dbstate").textContent="Online";$("listener").textContent="Live"}catch(e){log("Key read failed: "+e.message)}}
+function startListener(){onValue(keysRef,s=>{keyCache=s.val()||{};renderKeys();$("dbstate").textContent="Online";$("listener").textContent="Live";log("Key registry synchronized")},e=>{log("Listener error: "+e.message);$("dbstate").textContent="Error"})}
 $("logout").onclick=()=>signOut(auth);
+
+function detectDevice(){
+ const ua=navigator.userAgent||"Unknown";
+ let os="Unknown", browser="Unknown", engine="Unknown", type="Desktop";
+ if(/Android/i.test(ua)){os="Android";type=/Mobile/i.test(ua)?"Mobile":"Tablet";}
+ else if(/iPhone|iPad|iPod/i.test(ua)){os=/iPad/i.test(ua)?"iPadOS":"iOS";type=/iPad/i.test(ua)?"Tablet":"Mobile";}
+ else if(/Windows NT/i.test(ua)) os="Windows";
+ else if(/Mac OS X/i.test(ua)) os="macOS";
+ else if(/CrOS/i.test(ua)) os="ChromeOS";
+ else if(/Linux/i.test(ua)) os="Linux";
+ if(/Edg\//i.test(ua)) browser="Microsoft Edge"; else if(/OPR\//i.test(ua)) browser="Opera"; else if(/SamsungBrowser/i.test(ua)) browser="Samsung Internet"; else if(/Firefox\//i.test(ua)) browser="Firefox"; else if(/Chrome\//i.test(ua)) browser="Chrome"; else if(/Safari\//i.test(ua)) browser="Safari";
+ if(/Gecko\//i.test(ua)&&/Firefox/i.test(ua)) engine="Gecko"; else if(/AppleWebKit/i.test(ua)) engine="WebKit/Blink"; else if(/Trident/i.test(ua)) engine="Trident";
+ const nav=navigator, conn=nav.connection||nav.mozConnection||nav.webkitConnection;
+ const set=(id,v)=>$(id).textContent=v;
+ set("dType",type);set("dOS",os);set("dBrowser",browser);set("dEngine",engine);
+ set("dScreen",`${screen.width} × ${screen.height}`);set("dViewport",`${innerWidth} × ${innerHeight}`);set("dDpr",String(devicePixelRatio||1));
+ set("dCores",nav.hardwareConcurrency?`${nav.hardwareConcurrency}`:"Unavailable");set("dMemory",nav.deviceMemory?`${nav.deviceMemory} GB`:"Unavailable");
+ set("dLang",nav.language||"Unknown");set("dTz",Intl.DateTimeFormat().resolvedOptions().timeZone||"Unknown");set("dTouch",(nav.maxTouchPoints||0)>0?`Yes (${nav.maxTouchPoints} points)`:"No");
+ set("dConn",conn?(conn.effectiveType||conn.type||"Available") : "Unavailable");set("dOnline",nav.onLine?"Online":"Offline");set("dCookies",nav.cookieEnabled?"Enabled":"Disabled");set("dUA",ua);
+ let gpu="Unavailable";try{const c=document.createElement("canvas"),g=c.getContext("webgl")||c.getContext("experimental-webgl");if(g){const ext=g.getExtension("WEBGL_debug_renderer_info");gpu=ext?g.getParameter(ext.UNMASKED_RENDERER_WEBGL):"WebGL available";}}catch(e){}set("dGpu",gpu);
+}
+$("refreshDevice").onclick=detectDevice;
+addEventListener("resize",()=>{ $("dViewport").textContent=`${innerWidth} × ${innerHeight}`; });
+addEventListener("online",()=>$("dOnline").textContent="Online");addEventListener("offline",()=>$("dOnline").textContent="Offline");
+detectDevice();
 </script>
 </body>
 </html>

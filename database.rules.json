@@ -1,9 +1,13 @@
 {
   "rules": {
     "config": {
-      "password": {
+      "keys": {
         ".read": true,
         ".write": "auth != null"
+      },
+      "password": {
+        ".read": false,
+        ".write": false
       }
     }
   }

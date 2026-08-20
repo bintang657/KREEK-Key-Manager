@@ -1,32 +1,24 @@
-# STAR Sensi Control Center Setup
+# STAR Sensi Control Center — Multi-user Keys
 
-## Firebase Authentication
+Enable Firebase Authentication > Email/Password and create an administrator.
 
-1. Firebase Console -> Authentication -> Sign-in method -> Email/Password.
-2. Create the administrator account.
-3. Do not store the administrator password in this file or in the website source.
-4. The login page has a password-reset action.
+Deploy `database.rules.json`.
 
-## Realtime Database
-
-Create this node:
-
+Database shape:
 ```json
 {
   "config": {
-    "password": "your-password"
+    "keys": {
+      "USER-AbC123": {
+        "enabled": true,
+        "label": "USER",
+        "createdAt": 0
+      }
+    }
   }
 }
 ```
 
-Deploy `database.rules.json` from the Firebase Realtime Database Rules tab.
+The dashboard can generate 1–50 keys per batch, enable/disable individual keys, disable all, and delete keys. The APK listens to `config/keys` in realtime.
 
-## Admin panel
-
-Open `index.html` from a web server. The Firebase Web SDK configuration is already set to the new project.
-
-The administrator must authenticate before the panel can write `config/password`.
-
-## Android
-
-The Android source already contains `google-services.json` for project `star-sensi-control` and listens to `config/password` with a realtime ValueEventListener.
+Security note: this APK reads `config/keys` without Firebase Auth, so the registry is client-readable. For production-grade authentication, verify credentials on a trusted backend/Cloud Function and store only salted/hashed credentials server-side.
